@@ -1,0 +1,1283 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#0f0d0b">
+<title>あの頃の場所</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Shippori+Mincho:wght@500;700&family=Zen+Kaku+Gothic+New:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0f0d0b;
+    --panel: #1a1714;
+    --panel-2: #24201b;
+    --line: #3a332b;
+    --text: #efe6d8;
+    --muted: #a3978a;
+    --accent: #e0a458;
+    --accent-ink: #1a1209;
+    --danger: #d9705f;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; height: 100%; background: var(--bg); color: var(--text);
+    font-family: "Zen Kaku Gothic New", system-ui, sans-serif; overflow: hidden; }
+  button { font: inherit; color: inherit; cursor: pointer; }
+  kbd { display: inline-block; min-width: 1.7em; padding: 1px 6px; border: 1px solid var(--line);
+    border-bottom-width: 2px; border-radius: 5px; background: var(--panel-2); font-family: inherit;
+    font-size: 12px; text-align: center; color: var(--text); }
+
+  #canvas-wrap { position: fixed; inset: 0; }
+  #canvas-wrap canvas { display: block; width: 100%; height: 100%; }
+  body.vintage #canvas-wrap canvas { filter: sepia(.45) saturate(.8) contrast(1.05) brightness(.97); }
+  #vignette { position: fixed; inset: 0; pointer-events: none; opacity: 0; transition: opacity .6s;
+    background: radial-gradient(ellipse at center, transparent 55%, rgba(0,0,0,.65) 100%); }
+  #grain { position: fixed; inset: -50%; pointer-events: none; opacity: 0; transition: opacity .6s;
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/></filter><rect width='100%' height='100%' filter='url(%23n)' opacity='.5'/></svg>");
+    animation: grain 0.9s steps(6) infinite; mix-blend-mode: overlay; }
+  body.vintage #vignette { opacity: 1; }
+  body.vintage #grain { opacity: .35; }
+  @keyframes grain { 0%{transform:translate(0,0)} 20%{transform:translate(-4%,3%)} 40%{transform:translate(3%,-5%)}
+    60%{transform:translate(-2%,4%)} 80%{transform:translate(5%,1%)} 100%{transform:translate(0,0)} }
+
+  /* ---------- Home ---------- */
+  #home { position: fixed; inset: 0; overflow-y: auto; z-index: 20;
+    background: radial-gradient(1200px 600px at 20% -10%, #2b2117 0%, transparent 60%), var(--bg); }
+  #home.hidden { display: none; }
+  .home-inner { max-width: 1080px; margin: 0 auto; padding: 56px 24px 80px; }
+  .brand { font-family: "Shippori Mincho", serif; font-size: clamp(34px, 5vw, 52px); font-weight: 700;
+    letter-spacing: .06em; margin: 0; }
+  .sub { color: var(--muted); margin: 10px 0 36px; line-height: 1.8; }
+  #drop { border: 1.5px dashed var(--line); border-radius: 16px; padding: 30px 20px; text-align: center;
+    background: rgba(255,255,255,.015); transition: border-color .2s, background .2s; }
+  #drop.over { border-color: var(--accent); background: rgba(224,164,88,.07); }
+  #drop strong { display: block; font-size: 17px; margin-bottom: 8px; }
+  #drop p { color: var(--muted); margin: 6px 0 16px; font-size: 13px; line-height: 1.7; }
+  .btn { border: 1px solid var(--line); background: var(--panel-2); padding: 9px 16px; border-radius: 10px; }
+  .btn:hover { border-color: var(--accent); }
+  .btn.primary { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); font-weight: 700; }
+  .btn.ghost { background: transparent; }
+  .btn.danger:hover { border-color: var(--danger); color: var(--danger); }
+  h2.section { font-family: "Shippori Mincho", serif; font-size: 20px; margin: 44px 0 16px; font-weight: 700; }
+  #library { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 16px; }
+  .card { background: var(--panel); border: 1px solid var(--line); border-radius: 14px; overflow: hidden;
+    display: flex; flex-direction: column; transition: transform .2s, border-color .2s; }
+  .card:hover { transform: translateY(-2px); border-color: #5a4c3c; }
+  .thumb { aspect-ratio: 16/10; background: #151210 center/cover no-repeat; position: relative; cursor: pointer;
+    display: grid; place-items: center; color: #5a4c3c; font-family: "Shippori Mincho", serif; font-size: 40px; }
+  .thumb .go { position: absolute; inset: 0; display: grid; place-items: center; opacity: 0; transition: opacity .2s;
+    background: rgba(0,0,0,.45); color: var(--text); font-size: 15px; font-family: "Zen Kaku Gothic New", sans-serif; }
+  .thumb:hover .go { opacity: 1; }
+  .card-body { padding: 12px 14px 14px; display: flex; flex-direction: column; gap: 4px; }
+  .card-title { font-weight: 700; font-size: 15px; }
+  .card-meta { color: var(--muted); font-size: 12px; }
+  .card-actions { display: flex; gap: 6px; margin-top: 8px; }
+  .card-actions .btn { padding: 5px 10px; font-size: 12px; }
+  .empty { color: var(--muted); font-size: 14px; padding: 20px 0; }
+  .howto { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 16px; }
+  .howto div { background: var(--panel); border: 1px solid var(--line); border-radius: 14px; padding: 16px 18px;
+    font-size: 13px; line-height: 1.9; color: var(--muted); }
+  .howto b { color: var(--text); }
+
+  /* ---------- Dialog ---------- */
+  dialog { background: var(--panel); color: var(--text); border: 1px solid var(--line); border-radius: 16px;
+    padding: 22px; width: min(440px, calc(100vw - 32px)); }
+  dialog::backdrop { background: rgba(0,0,0,.6); }
+  dialog h3 { margin: 0 0 14px; font-family: "Shippori Mincho", serif; }
+  dialog label { display: block; font-size: 13px; color: var(--muted); margin: 12px 0 6px; }
+  dialog input { width: 100%; background: var(--bg); border: 1px solid var(--line); color: var(--text);
+    border-radius: 8px; padding: 9px 11px; font: inherit; }
+  dialog input:focus { outline: none; border-color: var(--accent); }
+  .dlg-files { font-size: 12px; color: var(--muted); margin-top: 4px; word-break: break-all; }
+  .dlg-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 20px; }
+
+  /* ---------- Viewer HUD ---------- */
+  #hud { position: fixed; inset: 0; pointer-events: none; z-index: 10; display: none; }
+  body.viewing #hud { display: block; }
+  #crosshair { position: absolute; left: 50%; top: 50%; width: 6px; height: 6px; margin: -3px 0 0 -3px;
+    border-radius: 50%; background: rgba(255,255,255,.7); box-shadow: 0 0 0 1px rgba(0,0,0,.4); opacity: 0; }
+  body.locked #crosshair { opacity: 1; }
+  #topbar { position: absolute; top: 14px; left: 16px; right: 16px; display: flex; justify-content: space-between;
+    align-items: flex-start; gap: 12px; }
+  .chip { pointer-events: auto; background: rgba(15,13,11,.72); backdrop-filter: blur(8px); border: 1px solid rgba(255,255,255,.08);
+    border-radius: 12px; padding: 8px 12px; font-size: 13px; }
+  #placeName { font-weight: 700; }
+  #placeName small { color: var(--muted); font-weight: 400; margin-left: 8px; }
+  #modeChips { display: flex; gap: 6px; flex-wrap: wrap; justify-content: flex-end; }
+  #modeChips .chip { color: var(--muted); }
+  #modeChips .chip b { color: var(--text); font-weight: 500; }
+  #help { position: absolute; left: 16px; bottom: 16px; font-size: 12px; line-height: 2; max-width: 520px;
+    transition: opacity .3s; }
+  #help.hide { opacity: 0; }
+  #help .row { display: flex; gap: 14px; flex-wrap: wrap; }
+  #help span { white-space: nowrap; color: var(--muted); }
+  #toast { position: absolute; left: 50%; bottom: 28px; transform: translateX(-50%); opacity: 0; transition: opacity .3s; }
+  #toast.show { opacity: 1; }
+  #clickToStart { position: absolute; inset: 0; display: grid; place-items: center; pointer-events: none; }
+  #clickToStart div { background: rgba(15,13,11,.78); border: 1px solid rgba(255,255,255,.1); border-radius: 14px;
+    padding: 16px 22px; text-align: center; font-size: 14px; line-height: 1.9; }
+  body.locked #clickToStart, body.loading #clickToStart, body.arriving #clickToStart { display: none; }
+  #exitBtn { pointer-events: auto; }
+
+  /* ---------- Loading / arrival ---------- */
+  #veil { position: fixed; inset: 0; z-index: 15; background: #000; opacity: 0; pointer-events: none;
+    display: grid; place-items: center; transition: opacity 1.6s ease; }
+  body.loading #veil, body.arriving #veil { opacity: 1; pointer-events: auto; }
+  body.arrived #veil { transition: opacity 2.2s ease; }
+  .veil-inner { text-align: center; }
+  #veilTitle { font-family: "Shippori Mincho", serif; font-size: clamp(28px, 4.5vw, 46px); letter-spacing: .12em;
+    opacity: 0; transform: translateY(8px); transition: all 1.2s ease; }
+  #veilYear { color: var(--accent); letter-spacing: .3em; margin-bottom: 14px; font-size: 14px;
+    opacity: 0; transition: opacity 1.2s ease .3s; }
+  body.arriving #veilTitle, body.loading #veilTitle { opacity: 1; transform: none; }
+  body.arriving #veilYear, body.loading #veilYear { opacity: 1; }
+  #progress { margin: 26px auto 0; width: 220px; height: 2px; background: #2a241e; border-radius: 2px; overflow: hidden; }
+  #progress i { display: block; height: 100%; width: 0; background: var(--accent); transition: width .2s; }
+  #veilMsg { color: var(--muted); font-size: 12px; margin-top: 10px; min-height: 1em; }
+  body.arriving #progress, body.arriving #veilMsg { visibility: hidden; }
+
+  /* ---------- Touch controls ---------- */
+  .touch-only { display: none !important; }
+  body.touch .touch-only { display: revert !important; }
+  body.touch .desk-only { display: none !important; }
+  body.viewing { overscroll-behavior: none; }
+  #canvas-wrap canvas { touch-action: none; -webkit-user-select: none; user-select: none; }
+  #touchUI { position: fixed; inset: 0; pointer-events: none; z-index: 11; display: none;
+    -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; }
+  body.touch.viewing #touchUI { display: block; }
+  body.touch #help, body.touch #crosshair { display: none; }
+  body.touch.touched #clickToStart { display: none; }
+  #stick { position: absolute; left: calc(22px + env(safe-area-inset-left)); bottom: calc(28px + env(safe-area-inset-bottom));
+    width: 132px; height: 132px; border-radius: 50%; pointer-events: auto; touch-action: none;
+    background: radial-gradient(circle, rgba(15,13,11,.38) 0 55%, rgba(15,13,11,.55) 56% 100%);
+    border: 1.5px solid rgba(255,255,255,.35); box-shadow: 0 2px 12px rgba(0,0,0,.25); backdrop-filter: blur(6px); transition: border-color .15s; }
+  #stick.active { border-color: rgba(255,255,255,.4); }
+  #stick.run { border-color: var(--accent); }
+  #knob { position: absolute; left: 50%; top: 50%; width: 56px; height: 56px; margin: -28px 0 0 -28px; border-radius: 50%;
+    background: rgba(239,230,216,.82); box-shadow: 0 4px 14px rgba(0,0,0,.35); pointer-events: none; }
+  #stick.run #knob { background: var(--accent); }
+  .tbtns { position: absolute; right: calc(18px + env(safe-area-inset-right)); bottom: calc(30px + env(safe-area-inset-bottom));
+    display: flex; flex-direction: column; gap: 10px; pointer-events: auto; }
+  .tbtn { width: 54px; height: 54px; border-radius: 50%; border: 1.5px solid rgba(255,255,255,.22); touch-action: none;
+    background: rgba(15,13,11,.6); backdrop-filter: blur(6px); color: var(--text); font-size: 18px; display: grid; place-items: center; }
+  .tbtn.on { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
+  .tbtn small { display: block; font-size: 9px; line-height: 1; margin-top: -4px; color: inherit; opacity: .8; }
+  #menuBtn { position: absolute; right: calc(16px + env(safe-area-inset-right)); top: calc(60px + env(safe-area-inset-top)); pointer-events: auto; width: 44px; height: 44px; font-size: 20px; }
+  #touchMenu { position: absolute; right: calc(16px + env(safe-area-inset-right)); top: calc(112px + env(safe-area-inset-top)); width: min(260px, calc(100vw - 32px));
+    background: rgba(15,13,11,.88); backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,.1); border-radius: 14px;
+    padding: 6px; display: none; pointer-events: auto; }
+  #touchMenu.open { display: grid; }
+  #touchMenu button { background: none; border: 0; text-align: left; padding: 11px 12px; border-radius: 9px; font-size: 14px;
+    display: flex; justify-content: space-between; align-items: center; }
+  #touchMenu button:active { background: rgba(255,255,255,.08); }
+  #touchMenu button.toggle::after { content: "OFF"; font-size: 11px; color: var(--muted); }
+  #touchMenu button.toggle.on::after { content: "ON"; color: var(--accent); }
+  #touchMenu hr { border: 0; border-top: 1px solid rgba(255,255,255,.08); margin: 4px 6px; }
+  body.touch #topbar { top: calc(10px + env(safe-area-inset-top)); left: calc(12px + env(safe-area-inset-left)); right: calc(12px + env(safe-area-inset-right)); }
+  body.touch #speedChip { display: none; }
+  body.touch #toast { bottom: calc(180px + env(safe-area-inset-bottom)); white-space: nowrap; }
+  @media (orientation: landscape) and (max-height: 500px) {
+    #stick { width: 116px; height: 116px; bottom: calc(18px + env(safe-area-inset-bottom)); }
+    .tbtns { bottom: calc(18px + env(safe-area-inset-bottom)); }
+    body.touch #toast { bottom: 20px; }
+  }
+
+  @media (max-width: 640px) {
+    .home-inner { padding: 36px 16px 60px; }
+    #help { display: none; }
+  }
+</style>
+</head>
+<body>
+<div id="canvas-wrap"></div>
+<div id="vignette"></div>
+<div id="grain"></div>
+
+<!-- Home -->
+<section id="home">
+  <div class="home-inner">
+    <h1 class="brand">あの頃の場所</h1>
+    <p class="sub">Scaniverseで撮った3Dデータを読み込んで、昔の家やバイト先をもう一度歩く。<br>
+      データはこのブラウザの中だけに保存され、どこにも送信されません。</p>
+
+    <div id="drop">
+      <strong class="desk-only">ここに3Dデータをドラッグ＆ドロップ</strong><strong class="touch-only">3Dデータを追加</strong>
+      <p>対応形式: <b>.spz</b> / <b>.ply</b>（スプラット・メッシュ・点群）/ <b>.glb</b> / <b>.gltf</b> / <b>.obj</b>（.mtl・テクスチャ画像と一緒に）/ <b>.fbx</b> / <b>.usdz</b><br>
+        Scaniverseアプリの「Share → Export」で書き出したファイルをそのまま使えます。</p>
+      <button class="btn primary" id="pickBtn">ファイルを選ぶ</button>
+      <input type="file" id="fileInput" multiple hidden
+        accept=".spz,.ply,.splat,.ksplat,.sog,.glb,.gltf,.bin,.obj,.mtl,.fbx,.usdz,.usd,.usda,.usdc,.jpg,.jpeg,.png,.webp">
+    </div>
+
+    <h2 class="section">思い出の場所</h2>
+    <div id="library"></div>
+
+    <h2 class="section">あるき方</h2>
+    <div class="howto">
+      <div class="touch-only"><b>スマートフォンでは</b><br>左下のスティックで歩き、画面の空いているところを指でなぞって見回します。スティックを端まで倒すと小走り。▲▼で目線の高さ、⋯でメニュー。</div>
+      <div class="desk-only"><b>見回す</b><br>画面をクリックするとマウスで視点を動かせます（<kbd>Esc</kbd>で解除）。解除中はドラッグでも見回せます。</div>
+      <div class="desk-only"><b>歩く</b><br><kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> で移動、<kbd>Shift</kbd> で小走り、ホイールで歩く速さを変更。<kbd>Q</kbd><kbd>E</kbd> で目線を上下。</div>
+      <div><b>階段と壁</b><br>読み込み時に床・階段・壁を自動で解析します。段差（42cmまで）は歩くだけで自然に上り下りでき、壁は通り抜けません。<kbd>X</kbd> で解析結果を確認、<kbd>G</kbd> で当たり判定をオフ。</div>
+      <div><b>うまく表示されないとき</b><br>上下が逆さなら <kbd>T</kbd>。壁の中に出たら好きな場所まで歩いて <kbd>P</kbd> で開始地点を保存。<kbd>F</kbd> で飛行モード。</div>
+    </div>
+  </div>
+</section>
+
+<dialog id="addDlg">
+  <form method="dialog" id="addForm">
+    <h3>場所を追加</h3>
+    <label for="nameIn">場所の名前</label>
+    <input id="nameIn" required placeholder="例: 高円寺のアパート">
+    <label for="yearIn">いつ頃（任意）</label>
+    <input id="yearIn" placeholder="例: 2019 – 2022">
+    <div class="dlg-files" id="dlgFiles"></div>
+    <div class="dlg-actions">
+      <button class="btn ghost" value="cancel" formnovalidate>キャンセル</button>
+      <button class="btn primary" value="ok">保存して入る</button>
+    </div>
+  </form>
+</dialog>
+
+<dialog id="editDlg">
+  <form method="dialog">
+    <h3>名前を編集</h3>
+    <label for="editName">場所の名前</label>
+    <input id="editName" required>
+    <label for="editYear">いつ頃</label>
+    <input id="editYear">
+    <div class="dlg-actions">
+      <button class="btn ghost" value="cancel" formnovalidate>キャンセル</button>
+      <button class="btn primary" value="ok">保存</button>
+    </div>
+  </form>
+</dialog>
+
+<!-- Viewer HUD -->
+<div id="hud">
+  <div id="crosshair"></div>
+  <div id="topbar">
+    <div class="chip" id="placeName"></div>
+    <div id="modeChips">
+      <div class="chip" id="modeChip"></div>
+      <div class="chip" id="speedChip"></div>
+      <button class="chip" id="exitBtn">← 戻る</button>
+    </div>
+  </div>
+  <div id="clickToStart"><div><span class="desk-only">クリックして歩き始める<br><span style="color:var(--muted);font-size:12px">Escでマウスを解除</span></span><span class="touch-only">左のスティックで歩く<br><span style="color:var(--muted);font-size:12px">右側をなぞって見回す・端まで倒すと小走り</span></span></div></div>
+  <div class="chip" id="help">
+    <div class="row"><span><kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> 移動</span><span><kbd>Shift</kbd> 小走り</span><span><kbd>Q</kbd><kbd>E</kbd> 目線の高さ</span><span>ホイール 速さ</span></div>
+    <div class="row"><span><kbd>F</kbd> 歩行/飛行</span><span><kbd>G</kbd> 当たり判定</span><span><kbd>X</kbd> 解析結果を表示</span><span><kbd>T</kbd> 上下反転</span><span><kbd>V</kbd> 思い出フィルター</span></div>
+    <div class="row"><span><kbd>P</kbd> ここを開始地点に</span><span><kbd>R</kbd> 開始地点へ戻る</span><span><kbd>H</kbd> このヘルプ</span></div>
+  </div>
+  <div class="chip" id="toast"></div>
+</div>
+
+<div id="touchUI">
+  <div id="stick"><div id="knob"></div></div>
+  <div class="tbtns">
+    <button class="tbtn" data-hold="KeyE" aria-label="目線を上げる">▲</button>
+    <button class="tbtn" data-hold="KeyQ" aria-label="目線を下げる">▼</button>
+  </div>
+  <button class="tbtn" id="menuBtn" aria-label="メニュー">⋯</button>
+  <div id="touchMenu">
+    <button class="toggle" data-act="KeyF">飛行モード</button>
+    <button class="toggle" data-act="KeyG">当たり判定</button>
+    <button class="toggle" data-act="KeyV">思い出フィルター</button>
+    <button class="toggle" data-act="KeyX">解析結果を表示</button>
+    <hr>
+    <button data-act="KeyP">ここを開始地点にする</button>
+    <button data-act="KeyR">開始地点へ戻る</button>
+    <button data-act="KeyT">上下を反転する</button>
+  </div>
+</div>
+
+<div id="veil"><div class="veil-inner">
+  <div id="veilYear"></div>
+  <div id="veilTitle"></div>
+  <div id="progress"><i></i></div>
+  <div id="veilMsg"></div>
+</div></div>
+
+<script type="importmap">
+{
+  "imports": {
+    "three": "https://cdn.jsdelivr.net/npm/three@0.186.1/build/three.module.js",
+    "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.186.1/examples/jsm/",
+    "@sparkjsdev/spark": "https://cdn.jsdelivr.net/npm/@sparkjsdev/spark@2.4.0/dist/spark.module.js"
+  }
+}
+</script>
+<script type="module">
+import * as THREE from "three";
+import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
+import { OBJLoader } from "three/addons/loaders/OBJLoader.js";
+import { MTLLoader } from "three/addons/loaders/MTLLoader.js";
+import { PLYLoader } from "three/addons/loaders/PLYLoader.js";
+import { SparkRenderer, SplatMesh } from "@sparkjsdev/spark";
+
+
+const $ = (s) => document.querySelector(s);
+
+/* =========================================================
+   Storage (IndexedDB) — places live only in this browser
+   ========================================================= */
+const DB_NAME = "memory-walk", STORE = "places";
+const dbp = new Promise((res, rej) => {
+  const r = indexedDB.open(DB_NAME, 1);
+  r.onupgradeneeded = () => r.result.createObjectStore(STORE, { keyPath: "id" });
+  r.onsuccess = () => res(r.result);
+  r.onerror = () => rej(r.error);
+});
+async function tx(mode, fn) {
+  const db = await dbp;
+  return new Promise((res, rej) => {
+    const t = db.transaction(STORE, mode);
+    const out = fn(t.objectStore(STORE));
+    t.oncomplete = () => res(out && "result" in out ? out.result : undefined);
+    t.onerror = () => rej(t.error);
+  });
+}
+const dbAll = () => tx("readonly", (s) => s.getAll());
+const dbGet = (id) => tx("readonly", (s) => s.get(id));
+const dbPut = (rec) => tx("readwrite", (s) => s.put(rec));
+const dbDel = (id) => tx("readwrite", (s) => s.delete(id));
+async function dbPatch(id, patch) {
+  const rec = await dbGet(id);
+  if (!rec) return;
+  Object.assign(rec, patch);
+  await dbPut(rec);
+}
+navigator.storage?.persist?.().catch(() => {});
+
+/* =========================================================
+   File classification
+   ========================================================= */
+const ext = (n) => n.toLowerCase().split(".").pop();
+const MODEL_EXTS = ["spz", "splat", "ksplat", "sog", "ply", "glb", "gltf", "obj", "fbx", "usdz", "usd", "usda", "usdc"];
+function pickMain(files) {
+  const order = ["spz", "sog", "ksplat", "splat", "ply", "glb", "gltf", "obj", "fbx", "usdz", "usd", "usdc", "usda"];
+  for (const e of order) {
+    const f = files.find((f) => ext(f.name) === e);
+    if (f) return f;
+  }
+  return null;
+}
+async function plyKind(blob) {
+  const head = await blob.slice(0, 8192).text();
+  const end = head.indexOf("end_header");
+  const header = end >= 0 ? head.slice(0, end) : head;
+  if (/property\s+\w+\s+(f_dc_0|scale_0|rot_0|opacity)\b/.test(header)) return "splat";
+  if (/element\s+face\s+[1-9]/.test(header)) return "mesh";
+  return "points";
+}
+async function kindOf(main) {
+  const e = ext(main.name);
+  if (["spz", "splat", "ksplat", "sog"].includes(e)) return "splat";
+  if (e === "ply") return plyKind(main);
+  return "mesh";
+}
+
+/* =========================================================
+   Home screen
+   ========================================================= */
+let pendingFiles = null;
+const drop = $("#drop");
+$("#pickBtn").onclick = () => $("#fileInput").click();
+$("#fileInput").onchange = (e) => { handleFiles([...e.target.files]); e.target.value = ""; };
+["dragenter", "dragover"].forEach((t) => window.addEventListener(t, (e) => {
+  e.preventDefault(); if (!document.body.classList.contains("viewing")) drop.classList.add("over");
+}));
+["dragleave", "drop"].forEach((t) => window.addEventListener(t, (e) => {
+  e.preventDefault(); if (t === "drop" || e.target === drop) drop.classList.remove("over");
+}));
+window.addEventListener("drop", (e) => {
+  if (document.body.classList.contains("viewing")) return;
+  handleFiles([...e.dataTransfer.files]);
+});
+
+function handleFiles(files) {
+  files = files.filter((f) => f.size > 0);
+  const main = pickMain(files);
+  if (!main) { alert("対応している3Dファイルが見つかりませんでした。\n.spz / .ply / .glb / .obj などを選んでください。\n（.zip の場合は先に解凍してください）"); return; }
+  pendingFiles = files;
+  const base = main.name.replace(/\.[^.]+$/, "");
+  $("#nameIn").value = base;
+  $("#yearIn").value = "";
+  const mb = files.reduce((a, f) => a + f.size, 0) / 1e6;
+  $("#dlgFiles").textContent = `${files.map((f) => f.name).join(", ")}（${mb.toFixed(1)} MB）`;
+  $("#addDlg").showModal();
+  $("#nameIn").select();
+}
+$("#addDlg").addEventListener("close", async () => {
+  if ($("#addDlg").returnValue !== "ok" || !pendingFiles) { pendingFiles = null; return; }
+  const files = pendingFiles; pendingFiles = null;
+  const main = pickMain(files);
+  const kind = await kindOf(main);
+  const rec = {
+    id: crypto.randomUUID?.() ?? (Date.now().toString(36) + Math.random().toString(36).slice(2)),
+    name: $("#nameIn").value.trim() || main.name,
+    year: $("#yearIn").value.trim(),
+    created: Date.now(),
+    kind,
+    mainName: main.name,
+    files: files.map((f) => ({ name: f.name, blob: f })),
+    flip: kind === "splat",   // Scaniverse splats are stored Y-down
+    spawn: null,
+    thumb: null,
+  };
+  try { await dbPut(rec); }
+  catch (err) { alert("ブラウザへの保存に失敗しました（容量不足の可能性）。今回だけ表示します。"); }
+  renderLibrary();
+  enterPlace(rec);
+});
+
+async function renderLibrary() {
+  const lib = $("#library");
+  let recs = [];
+  try { recs = await dbAll(); } catch {}
+  recs.sort((a, b) => (b.lastVisit || b.created) - (a.lastVisit || a.created));
+  lib.innerHTML = "";
+  if (!recs.length) { lib.innerHTML = `<div class="empty">まだ場所がありません。上から3Dデータを追加してください。</div>`; return; }
+  for (const r of recs) {
+    const size = r.files.reduce((a, f) => a + (f.blob?.size || 0), 0) / 1e6;
+    const card = document.createElement("div");
+    card.className = "card";
+    card.innerHTML = `
+      <div class="thumb">${r.thumb ? "" : "◇"}<div class="go">歩きに行く</div></div>
+      <div class="card-body">
+        <div class="card-title"></div>
+        <div class="card-meta"></div>
+        <div class="card-actions">
+          <button class="btn" data-a="edit">名前を編集</button>
+          <button class="btn danger" data-a="del">削除</button>
+        </div>
+      </div>`;
+    if (r.thumb) card.querySelector(".thumb").style.backgroundImage = `url(${r.thumb})`;
+    card.querySelector(".card-title").textContent = r.name;
+    card.querySelector(".card-meta").textContent =
+      [r.year, { splat: "スプラット", mesh: "メッシュ", points: "点群" }[r.kind], `${size.toFixed(0)} MB`].filter(Boolean).join(" · ");
+    card.querySelector(".thumb").onclick = () => enterPlace(r);
+    card.querySelector('[data-a="del"]').onclick = async () => {
+      if (!confirm(`「${r.name}」をこのブラウザから削除しますか？\n（元のファイルは消えません）`)) return;
+      await dbDel(r.id); renderLibrary();
+    };
+    card.querySelector('[data-a="edit"]').onclick = () => {
+      const d = $("#editDlg");
+      $("#editName").value = r.name; $("#editYear").value = r.year || "";
+      d.onclose = async () => {
+        if (d.returnValue !== "ok") return;
+        await dbPatch(r.id, { name: $("#editName").value.trim() || r.name, year: $("#editYear").value.trim() });
+        renderLibrary();
+      };
+      d.showModal();
+    };
+    lib.appendChild(card);
+  }
+}
+renderLibrary();
+
+/* =========================================================
+   Three.js scene
+   ========================================================= */
+const renderer = new THREE.WebGLRenderer({ antialias: false, preserveDrawingBuffer: true });
+renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+renderer.setSize(innerWidth, innerHeight);
+renderer.outputColorSpace = THREE.SRGBColorSpace;
+$("#canvas-wrap").appendChild(renderer.domElement);
+const canvas = renderer.domElement;
+
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0x0c0b0a);
+const camera = new THREE.PerspectiveCamera(70, innerWidth / innerHeight, 0.02, 2000);
+camera.rotation.order = "YXZ";
+const spark = new SparkRenderer({ renderer });
+scene.add(spark);
+scene.add(new THREE.HemisphereLight(0xffffff, 0x444444, 2.2));
+
+addEventListener("resize", () => {
+  camera.aspect = innerWidth / innerHeight; camera.updateProjectionMatrix();
+  renderer.setSize(innerWidth, innerHeight);
+});
+
+/* =========================================================
+   Loading a place
+   ========================================================= */
+let current = null;        // { rec, root, model, urls }
+const setProgress = (p, msg) => { $("#progress i").style.width = `${Math.round(p * 100)}%`; if (msg != null) $("#veilMsg").textContent = msg; };
+
+function fileMap(rec) {
+  const map = new Map(), urls = [];
+  for (const f of rec.files) {
+    const u = URL.createObjectURL(f.blob); urls.push(u);
+    map.set(f.name.toLowerCase(), u);
+  }
+  return { map, urls };
+}
+function managerFor(map) {
+  const m = new THREE.LoadingManager();
+  m.setURLModifier((url) => {
+    if (url.startsWith("blob:") || url.startsWith("data:")) return url;
+    const name = decodeURIComponent(url.split(/[\\/]/).pop().split("?")[0]).toLowerCase();
+    return map.get(name) || url;
+  });
+  return m;
+}
+
+async function loadModel(rec) {
+  const main = rec.files.find((f) => f.name === rec.mainName);
+  const e = ext(main.name);
+  const { map, urls } = fileMap(rec);
+  const manager = managerFor(map);
+  const mainUrl = map.get(main.name.toLowerCase());
+
+  if (rec.kind === "splat") {
+    setProgress(0.15, "スプラットを展開中…");
+    const bytes = new Uint8Array(await main.blob.arrayBuffer());
+    setProgress(0.45);
+    const mesh = new SplatMesh({ fileBytes: bytes, fileName: main.name });
+    await mesh.initialized;
+    setProgress(0.95);
+    return { model: mesh, urls };
+  }
+
+  let obj;
+  if (e === "glb" || e === "gltf") {
+    const { DRACOLoader } = await import("three/addons/loaders/DRACOLoader.js");
+    const { MeshoptDecoder } = await import("three/addons/libs/meshopt_decoder.module.js");
+    const draco = new DRACOLoader().setDecoderPath("https://cdn.jsdelivr.net/npm/three@0.186.1/examples/jsm/libs/draco/gltf/");
+    const g = await new GLTFLoader(manager).setDRACOLoader(draco).setMeshoptDecoder(MeshoptDecoder).loadAsync(mainUrl, onProg);
+    draco.dispose();
+    obj = g.scene;
+  } else if (e === "obj") {
+    const loader = new OBJLoader(manager);
+    const mtl = rec.files.find((f) => ext(f.name) === "mtl");
+    if (mtl) {
+      const mats = await new MTLLoader(manager).loadAsync(map.get(mtl.name.toLowerCase()));
+      mats.preload(); loader.setMaterials(mats);
+    }
+    obj = await loader.loadAsync(mainUrl, onProg);
+  } else if (e === "fbx") {
+    const { FBXLoader } = await import("three/addons/loaders/FBXLoader.js");
+    obj = await new FBXLoader(manager).loadAsync(mainUrl, onProg);
+    obj.scale.setScalar(0.01); // FBX is usually in cm
+  } else if (e === "ply") {
+    const geo = await new PLYLoader(manager).loadAsync(mainUrl, onProg);
+    const hasColor = !!geo.getAttribute("color");
+    if (rec.kind === "mesh") {
+      if (!geo.getAttribute("normal")) geo.computeVertexNormals();
+      obj = new THREE.Mesh(geo, new THREE.MeshBasicMaterial({ vertexColors: hasColor, side: THREE.DoubleSide }));
+    } else {
+      obj = new THREE.Points(geo, new THREE.PointsMaterial({ size: 0.012, vertexColors: hasColor, sizeAttenuation: true }));
+    }
+  } else if (["usdz", "usd", "usda", "usdc"].includes(e)) {
+    const mod = await import("three/addons/loaders/USDLoader.js").catch(() => import("three/addons/loaders/USDZLoader.js"));
+    const L = mod.USDLoader || mod.USDZLoader;
+    obj = await new L(manager).loadAsync(mainUrl, onProg);
+  }
+  if (!obj) throw new Error("このファイル形式は読み込めませんでした");
+
+  // Scans already carry baked lighting in their textures -> show them unlit, like the phone app.
+  obj.traverse((o) => {
+    if (!o.isMesh) return;
+    const mats = Array.isArray(o.material) ? o.material : [o.material];
+    o.material = mats.map((m) => {
+      const b = new THREE.MeshBasicMaterial({
+        map: m.map || null, color: m.map ? 0xffffff : (m.color || 0xffffff),
+        vertexColors: !!o.geometry.getAttribute("color") && !m.map, side: THREE.DoubleSide,
+        transparent: m.transparent, opacity: m.opacity ?? 1,
+      });
+      if (b.map) b.map.colorSpace = THREE.SRGBColorSpace;
+      return b;
+    });
+    if (o.material.length === 1) o.material = o.material[0];
+  });
+  return { model: obj, urls };
+
+  function onProg(ev) { if (ev.lengthComputable) setProgress(0.1 + 0.8 * ev.loaded / ev.total, "読み込み中…"); }
+}
+
+async function enterPlace(rec) {
+  // fresh copy from DB (spawn etc. may have changed)
+  rec = (await dbGet(rec.id).catch(() => null)) || rec;
+  document.body.classList.add("viewing", "loading");
+  document.body.classList.remove("arrived");
+  $("#home").classList.add("hidden");
+  $("#veilTitle").textContent = rec.name;
+  $("#veilYear").textContent = rec.year || "";
+  setProgress(0.05, "準備中…");
+  $("#placeName").innerHTML = "";
+  $("#placeName").append(rec.name);
+  if (rec.year) { const s = document.createElement("small"); s.textContent = rec.year; $("#placeName").append(s); }
+
+  unloadPlace();
+  const started = performance.now();
+  try {
+    const { model, urls } = await loadModel(rec);
+    const root = new THREE.Group();
+    root.add(model);
+    scene.add(root);
+    current = { rec, root, model, urls };
+    await applyFlip(rec.flip, false);
+    await rebuildNav();
+    if (rec.spawn) setPose(rec.spawn); else autoSpawn();
+    setProgress(1, "");
+  } catch (err) {
+    console.error(err);
+    alert("読み込みに失敗しました: " + (err?.message || err));
+    exitPlace();
+    return;
+  }
+  // Let the title linger a moment, then fade the world in.
+  const wait = Math.max(0, 1400 - (performance.now() - started));
+  setTimeout(() => {
+    document.body.classList.remove("loading");
+    document.body.classList.add("arriving");
+    setTimeout(() => {
+      document.body.classList.add("arrived");
+      document.body.classList.remove("arriving");
+      dbPatch(rec.id, { lastVisit: Date.now() }).catch(() => {});
+      if (!rec.thumb) setTimeout(saveThumb, 2500);
+    }, 900);
+  }, wait);
+  updateChips();
+}
+
+function unloadPlace() {
+  toggleNavView(false);
+  nav = null;
+  if (!current) return;
+  scene.remove(current.root);
+  current.root.traverse((o) => {
+    if (o.isMesh || o.isPoints) {
+      o.geometry?.dispose?.();
+      (Array.isArray(o.material) ? o.material : [o.material]).forEach((m) => { m?.map?.dispose(); m?.dispose?.(); });
+    }
+  });
+  current.model.dispose?.();
+  current.urls.forEach((u) => URL.revokeObjectURL(u));
+  current = null;
+}
+
+function exitPlace() {
+  if (document.pointerLockElement) document.exitPointerLock();
+  unloadPlace();
+  document.body.classList.remove("viewing", "loading", "arriving", "arrived", "locked");
+  $("#home").classList.remove("hidden");
+  renderLibrary();
+}
+$("#exitBtn").onclick = exitPlace;
+
+function saveThumb() {
+  if (!current) return;
+  const id = current.rec.id;
+  renderer.render(scene, camera);
+  const c = document.createElement("canvas");
+  c.width = 480; c.height = 300;
+  const ctx = c.getContext("2d");
+  const s = canvas, r = Math.max(c.width / s.width, c.height / s.height);
+  ctx.drawImage(s, (c.width - s.width * r) / 2, (c.height - s.height * r) / 2, s.width * r, s.height * r);
+  const url = c.toDataURL("image/jpeg", 0.8);
+  current.rec.thumb = url;
+  dbPatch(id, { thumb: url }).catch(() => {});
+}
+
+/* =========================================================
+   Walkable-space analysis
+   ---------------------------------------------------------
+   The scan is turned into a 3D occupancy grid (voxels).
+   Every splat / triangle "votes" for the voxels it covers;
+   isolated noise (floaters) is removed. From that grid the
+   walker figures out floors, stairs and walls on its own.
+   ========================================================= */
+class NavGrid {
+  constructor(min, max, target = 0.07, maxCells = isTouch ? 10e6 : 24e6) {
+    const size = max.clone().sub(min);
+    let vs = target;
+    const vol = size.x * size.y * size.z;
+    if (vol / vs ** 3 > maxCells) vs = Math.cbrt(vol / maxCells);
+    this.vs = vs;
+    this.min = min.clone();
+    this.nx = Math.ceil(size.x / vs) + 1;
+    this.ny = Math.ceil(size.y / vs) + 1;
+    this.nz = Math.ceil(size.z / vs) + 1;
+    this.cnt = new Uint8Array(this.nx * this.ny * this.nz);
+    this.solid = null;
+    this.solidList = null;
+  }
+  ix(x) { return Math.floor((x - this.min.x) / this.vs); }
+  iy(y) { return Math.floor((y - this.min.y) / this.vs); }
+  iz(z) { return Math.floor((z - this.min.z) / this.vs); }
+  add(x, y, z, w) {
+    const ix = this.ix(x), iy = this.iy(y), iz = this.iz(z);
+    if (ix < 0 || iy < 0 || iz < 0 || ix >= this.nx || iy >= this.ny || iz >= this.nz) return;
+    const i = (iy * this.nz + iz) * this.nx + ix;
+    const v = this.cnt[i] + w;
+    this.cnt[i] = v > 255 ? 255 : v;
+  }
+  at(ix, iy, iz) {
+    if (ix < 0 || iy < 0 || iz < 0 || ix >= this.nx || iy >= this.ny || iz >= this.nz) return 0;
+    return this.solid[(iy * this.nz + iz) * this.nx + ix];
+  }
+  // threshold: votes needed; minNb: solid neighbours needed (removes floating specks)
+  finalize(threshold, minNb) {
+    const { cnt, nx, ny, nz } = this;
+    const solid = new Uint8Array(cnt.length);
+    let cand = [];
+    for (let i = 0; i < cnt.length; i++) if (cnt[i] >= threshold) { solid[i] = 1; cand.push(i); }
+    const keep = [], drop = [];
+    const L = nx * nz;
+    for (const i of cand) {
+      const ix = i % nx, t = (i / nx) | 0, iz = t % nz, iy = (t / nz) | 0;
+      let n = 0;
+      for (let dy = -1; dy <= 1 && n < minNb; dy++) {
+        const y = iy + dy; if (y < 0 || y >= ny) continue;
+        for (let dz = -1; dz <= 1 && n < minNb; dz++) {
+          const z = iz + dz; if (z < 0 || z >= nz) continue;
+          for (let dx = -1; dx <= 1; dx++) {
+            const x = ix + dx; if (x < 0 || x >= nx || (dx | dy | dz) === 0) continue;
+            if (solid[y * L + z * nx + x]) { if (++n >= minNb) break; }
+          }
+        }
+      }
+      (n >= minNb ? keep : drop).push(i);
+    }
+    for (const i of drop) solid[i] = 0;
+    cand = null;
+    this.solid = solid;
+    this.solidList = keep;
+    this.cnt = null;
+  }
+}
+
+const yieldUI = () => new Promise((r) => setTimeout(r, 0));
+
+async function buildNav(onMsg) {
+  const root = current.root, model = current.model;
+  root.updateMatrixWorld(true);
+  const M = model.matrixWorld;
+  const wq = new THREE.Quaternion(), wsV = new THREE.Vector3();
+  M.decompose(new THREE.Vector3(), wq, wsV);
+  const ws = (Math.abs(wsV.x) + Math.abs(wsV.y) + Math.abs(wsV.z)) / 3;
+  const v = new THREE.Vector3();
+
+  if (model instanceof SplatMesh) {
+    onMsg("床と壁を解析中…（スプラット）");
+    await yieldUI();
+    // pass 1: robust bounds (ignore the far-away floaters at the edges)
+    const n = model.packedSplats?.numSplats ?? model.extSplats?.numSplats ?? 0;
+    const every = Math.max(1, Math.floor(n / 200000));
+    const xs = [], ys = [], zs = [];
+    model.forEachSplat((i, c, s, q, op) => {
+      if (i % every || op < 0.2) return;
+      v.copy(c).applyMatrix4(M); xs.push(v.x); ys.push(v.y); zs.push(v.z);
+    });
+    if (!xs.length) return null;
+    const pct = (a, p) => { a.sort((x, y) => x - y); return a[Math.min(a.length - 1, Math.floor(a.length * p))]; };
+    const min = new THREE.Vector3(pct(xs, 0.005), pct(ys, 0.005), pct(zs, 0.005)).subScalar(1);
+    const max = new THREE.Vector3(pct(xs, 0.995), pct(ys, 0.995), pct(zs, 0.995)).addScalar(1);
+    const grid = new NavGrid(min, max);
+    const vs = grid.vs;
+    await yieldUI();
+    // pass 2: vote. Big flat splats (plain walls/floors) are spread over their disc.
+    const ax = [new THREE.Vector3(), new THREE.Vector3(), new THREE.Vector3()];
+    const sc = [0, 0, 0], qw = new THREE.Quaternion(), p = new THREE.Vector3();
+    model.forEachSplat((i, c, s, q, op) => {
+      if (op < 0.15) return;
+      sc[0] = s.x * ws; sc[1] = s.y * ws; sc[2] = s.z * ws;
+      const w = op > 0.6 ? 2 : 1;
+      v.copy(c).applyMatrix4(M);
+      const smax = Math.max(sc[0], sc[1], sc[2]);
+      if (smax <= vs) { grid.add(v.x, v.y, v.z, w); return; }
+      const smin = Math.min(sc[0], sc[1], sc[2]);
+      if (smin > 0.12 || smax > 3) { grid.add(v.x, v.y, v.z, 1); return; } // fuzzy blob / sky
+      qw.copy(wq).multiply(q);
+      ax[0].set(1, 0, 0).applyQuaternion(qw); ax[1].set(0, 1, 0).applyQuaternion(qw); ax[2].set(0, 0, 1).applyQuaternion(qw);
+      // the two largest axes span the disc
+      let a = 0, b = 1, cmin = 2;
+      if (sc[0] <= sc[1] && sc[0] <= sc[2]) { a = 1; b = 2; cmin = 0; } else if (sc[1] <= sc[2]) { a = 0; b = 2; cmin = 1; }
+      const ra = sc[a] * 1.2, rb = sc[b] * 1.2;
+      const na = Math.min(5, Math.ceil(ra / vs)), nb = Math.min(5, Math.ceil(rb / vs));
+      for (let ia = -na; ia <= na; ia++) {
+        const fa = ia / na;
+        for (let ib = -nb; ib <= nb; ib++) {
+          const fb = ib / nb;
+          if (fa * fa + fb * fb > 1) continue;
+          p.copy(v).addScaledVector(ax[a], fa * ra).addScaledVector(ax[b], fb * rb);
+          grid.add(p.x, p.y, p.z, w);
+        }
+      }
+    });
+    onMsg("ノイズを除去中…");
+    await yieldUI();
+    grid.finalize(2, 3);
+    return grid;
+  }
+
+  // ---- meshes / point clouds: sample every triangle surface ----
+  onMsg("床と壁を解析中…（メッシュ）");
+  await yieldUI();
+  const box = new THREE.Box3().setFromObject(model);
+  const grid = new NavGrid(box.min.clone().subScalar(0.5), box.max.clone().addScalar(0.5));
+  const vs = grid.vs;
+  const a = new THREE.Vector3(), b = new THREE.Vector3(), c = new THREE.Vector3(), p = new THREE.Vector3();
+  const objs = [];
+  model.traverse((o) => { if (o.isMesh || o.isPoints) objs.push(o); });
+  for (const o of objs) {
+    const pos = o.geometry.getAttribute("position");
+    if (!pos) continue;
+    const mw = o.matrixWorld;
+    if (o.isPoints) {
+      for (let i = 0; i < pos.count; i++) { a.fromBufferAttribute(pos, i).applyMatrix4(mw); grid.add(a.x, a.y, a.z, 1); }
+      continue;
+    }
+    const idx = o.geometry.index;
+    const triCount = idx ? idx.count / 3 : pos.count / 3;
+    for (let t = 0; t < triCount; t++) {
+      const i0 = idx ? idx.getX(t * 3) : t * 3, i1 = idx ? idx.getX(t * 3 + 1) : t * 3 + 1, i2 = idx ? idx.getX(t * 3 + 2) : t * 3 + 2;
+      a.fromBufferAttribute(pos, i0).applyMatrix4(mw);
+      b.fromBufferAttribute(pos, i1).applyMatrix4(mw);
+      c.fromBufferAttribute(pos, i2).applyMatrix4(mw);
+      const e = Math.max(a.distanceTo(b), b.distanceTo(c), c.distanceTo(a));
+      const n = Math.min(400, Math.ceil(e / (vs * 0.7)));
+      for (let i = 0; i <= n; i++) for (let j = 0; j <= n - i; j++) {
+        const u = i / Math.max(n, 1), w = j / Math.max(n, 1);
+        p.copy(a).multiplyScalar(1 - u - w).addScaledVector(b, u).addScaledVector(c, w);
+        grid.add(p.x, p.y, p.z, 2);
+      }
+      if ((t & 32767) === 0) await yieldUI();
+    }
+  }
+  grid.finalize(objs.some((o) => o.isPoints) ? 2 : 1, 2);
+  return grid;
+}
+
+/* ---------- body model ---------- */
+const BODY_R = 0.22;      // shoulder radius (m)
+const STEP_UP = 0.42;     // tallest step it will climb on its own (m)
+const FOOT = [[0, 0], [0.13, 0], [-0.13, 0], [0, 0.13], [0, -0.13], [0.09, 0.09], [-0.09, 0.09], [0.09, -0.09], [-0.09, -0.09]];
+
+// Highest walkable surface under the footprint, searching from a step above the feet to 3m below.
+function groundAt(x, z, feet) {
+  const g = nav; if (!g) return null;
+  const top = g.iy(feet + STEP_UP), bot = Math.max(0, g.iy(feet - 3));
+  let best = null;
+  for (const [ox, oz] of FOOT) {
+    const ix = g.ix(x + ox), iz = g.iz(z + oz);
+    if (g.at(ix, top, iz)) continue; // column is a wall here, not a floor
+    for (let iy = top - 1; iy >= bot; iy--) {
+      if (g.at(ix, iy, iz)) { const h = g.min.y + (iy + 1) * g.vs; if (best === null || h > best) best = h; break; }
+    }
+  }
+  return best;
+}
+// Is there room for the body (above step height, up to the head) at this spot?
+function bodyFree(x, z, feet, eye) {
+  const g = nav; if (!g) return true;
+  const R = BODY_R + g.vs * 0.5, R2 = R * R;
+  const iy0 = g.iy(feet + STEP_UP + 0.02), iy1 = g.iy(feet + eye + 0.1);
+  const ix0 = g.ix(x - R), ix1 = g.ix(x + R), iz0 = g.iz(z - R), iz1 = g.iz(z + R);
+  for (let iy = iy0; iy <= iy1; iy++) for (let iz = iz0; iz <= iz1; iz++) {
+    const dz = g.min.z + (iz + 0.5) * g.vs - z;
+    for (let ix = ix0; ix <= ix1; ix++) {
+      const dx = g.min.x + (ix + 0.5) * g.vs - x;
+      if (dx * dx + dz * dz <= R2 && g.at(ix, iy, iz)) return false;
+    }
+  }
+  return true;
+}
+
+function findSpawn() {
+  const g = nav;
+  const box = worldBox();
+  const c = box.getCenter(new THREE.Vector3());
+  const lo = new THREE.Vector3(Math.max(box.min.x, g.min.x), 0, Math.max(box.min.z, g.min.z));
+  const hi = new THREE.Vector3(Math.min(box.max.x, g.min.x + g.nx * g.vs), 0, Math.min(box.max.z, g.min.z + g.nz * g.vs));
+  let best = null;
+  const step = Math.max(0.25, (hi.x - lo.x + hi.z - lo.z) / 160);
+  const headCells = Math.ceil((EYE_DEFAULT + 0.1) / g.vs);
+  for (let x = lo.x; x <= hi.x; x += step) for (let z = lo.z; z <= hi.z; z += step) {
+    const ix = g.ix(x), iz = g.iz(z);
+    // lowest floor in this column with full headroom
+    for (let iy = 0; iy < g.ny - headCells; iy++) {
+      if (!g.at(ix, iy, iz)) continue;
+      let free = true;
+      for (let k = 1; k <= headCells; k++) if (g.at(ix, iy + k, iz)) { free = false; break; }
+      if (!free) continue;
+      const feet = g.min.y + (iy + 1) * g.vs;
+      const gnd = groundAt(x, z, feet);
+      if (gnd == null || Math.abs(gnd - feet) > 0.15 || !bodyFree(x, z, gnd, EYE_DEFAULT)) continue;
+      const d = Math.hypot(x - c.x, z - c.z);
+      if (!best || d < best.d) best = { d, x, z, feet: gnd };
+      break;
+    }
+  }
+  return best;
+}
+// face toward the most open direction
+function openestYaw(x, y, z) {
+  const g = nav; let bestYaw = 0, bestD = -1;
+  for (let k = 0; k < 16; k++) {
+    const yaw = (k / 16) * Math.PI * 2, dx = -Math.sin(yaw), dz = -Math.cos(yaw);
+    let d = 0;
+    for (; d < 15; d += g.vs) if (g.at(g.ix(x + dx * d), g.iy(y), g.iz(z + dz * d))) break;
+    if (d > bestD) { bestD = d; bestYaw = yaw; }
+  }
+  return bestYaw;
+}
+
+/* ---------- debug view of what the walker "sees" ---------- */
+let navView = null;
+function toggleNavView(force) {
+  const show = force ?? !navView;
+  if (navView) { scene.remove(navView); navView.geometry.dispose(); navView.material.dispose(); navView = null; }
+  if (current) current.model.visible = !(show && nav);
+  if (!show || !nav) return false;
+  const list = nav.solidList, every = Math.max(1, Math.ceil(list.length / 1.5e6));
+  const n = Math.floor(list.length / every);
+  const pos = new Float32Array(n * 3), col = new Float32Array(n * 3);
+  const { nx, nz, vs, min } = nav, col3 = new THREE.Color();
+  const yr = nav.ny * vs;
+  for (let k = 0; k < n; k++) {
+    const i = list[k * every], ix = i % nx, t = (i / nx) | 0, iz = t % nz, iy = (t / nz) | 0;
+    pos[k * 3] = min.x + (ix + 0.5) * vs; pos[k * 3 + 1] = min.y + (iy + 0.5) * vs; pos[k * 3 + 2] = min.z + (iz + 0.5) * vs;
+    col3.setHSL(0.6 - 0.6 * (iy * vs / yr), 0.8, 0.55);
+    col.set([col3.r, col3.g, col3.b], k * 3);
+  }
+  const geo = new THREE.BufferGeometry();
+  geo.setAttribute("position", new THREE.BufferAttribute(pos, 3));
+  geo.setAttribute("color", new THREE.BufferAttribute(col, 3));
+  navView = new THREE.Points(geo, new THREE.PointsMaterial({ size: vs * 0.6, vertexColors: true, sizeAttenuation: true }));
+  scene.add(navView);
+  return true;
+}
+
+/* =========================================================
+   Orientation / spawn
+   ========================================================= */
+let nav = null;
+function worldBox() {
+  current.root.updateMatrixWorld(true);
+  const m = current.model;
+  if (m instanceof SplatMesh) {
+    const b = m.getBoundingBox(true).clone();
+    return b.applyMatrix4(m.matrixWorld);
+  }
+  return new THREE.Box3().setFromObject(m);
+}
+async function rebuildNav() {
+  toggleNavView(false);
+  nav = null;
+  try { nav = await buildNav((m) => setProgress(0.97, m)); }
+  catch (err) { console.warn("nav build failed", err); nav = null; }
+}
+async function applyFlip(flip, announce = true) {
+  current.root.rotation.set(flip ? Math.PI : 0, 0, 0);
+  current.root.updateMatrixWorld(true);
+  current.rec.flip = flip;
+  if (announce) {
+    dbPatch(current.rec.id, { flip }).catch(() => {});
+    toast("上下を反転して床と壁を再解析中…");
+    await rebuildNav();
+    current.rec.spawn = null;
+    dbPatch(current.rec.id, { spawn: null }).catch(() => {});
+    autoSpawn();
+    updateChips();
+    toast(flip ? "上下を反転しました" : "上下を元に戻しました");
+  }
+}
+function autoSpawn() {
+  state.eye = EYE_DEFAULT; state.pitch = 0; state.vel.set(0, 0, 0);
+  const s = nav && findSpawn();
+  if (s) {
+    state.feet = s.feet;
+    camera.position.set(s.x, s.feet + state.eye, s.z);
+    state.yaw = openestYaw(s.x, s.feet + state.eye, s.z);
+  } else {
+    const box = worldBox();
+    const c = box.getCenter(new THREE.Vector3());
+    const size = box.getSize(new THREE.Vector3());
+    state.eye = Math.min(EYE_DEFAULT, Math.max(0.6, size.y * 0.8));
+    state.feet = box.min.y;
+    camera.position.set(c.x, state.feet + state.eye, c.z);
+    state.yaw = size.x > size.z ? -Math.PI / 2 : 0;
+  }
+  applyLook();
+}
+function getPose() {
+  return { p: camera.position.toArray(), yaw: state.yaw, pitch: state.pitch, eye: state.eye, fly: state.fly };
+}
+function setPose(s) {
+  camera.position.fromArray(s.p);
+  state.yaw = s.yaw; state.pitch = s.pitch; state.eye = s.eye ?? EYE_DEFAULT; state.fly = !!s.fly;
+  state.feet = camera.position.y - state.eye;
+  state.vel.set(0, 0, 0);
+  applyLook();
+}
+
+/* =========================================================
+   Controls — first-person walk
+   ========================================================= */
+const EYE_DEFAULT = 1.6;
+const state = {
+  yaw: 0, pitch: 0, eye: EYE_DEFAULT, feet: 0,
+  fly: false, collide: true, speed: 1.4, // m/s (walking pace)
+  vel: new THREE.Vector3(), keys: new Set(), bob: 0,
+};
+function applyLook() {
+  state.pitch = Math.max(-1.5, Math.min(1.5, state.pitch));
+  camera.rotation.set(state.pitch, state.yaw, 0);
+}
+
+canvas.addEventListener("click", () => {
+  if (!current || document.body.classList.contains("loading") || isTouch) return;
+  if (!document.pointerLockElement) canvas.requestPointerLock?.({ unadjustedMovement: true })?.catch?.(() => canvas.requestPointerLock());
+});
+document.addEventListener("pointerlockchange", () => {
+  document.body.classList.toggle("locked", document.pointerLockElement === canvas);
+});
+const SENS = 0.0022;
+document.addEventListener("mousemove", (e) => {
+  if (document.pointerLockElement !== canvas) return;
+  state.yaw -= e.movementX * SENS; state.pitch -= e.movementY * SENS; applyLook();
+});
+// Drag-to-look (mouse when not locked, or any finger on the screen) — tracked per pointer for multi-touch
+const looks = new Map();
+const capture = (el, id) => { try { el.setPointerCapture(id); } catch {} };
+canvas.addEventListener("pointerdown", (e) => {
+  if (e.pointerType === "touch") setTouchMode(true);
+  if (document.pointerLockElement) return;
+  looks.set(e.pointerId, { x: e.clientX, y: e.clientY });
+  capture(canvas, e.pointerId);
+  document.body.classList.add("touched");
+});
+canvas.addEventListener("pointermove", (e) => {
+  const d = looks.get(e.pointerId);
+  if (!d || document.pointerLockElement) return;
+  const dx = e.clientX - d.x, dy = e.clientY - d.y;
+  d.x = e.clientX; d.y = e.clientY;
+  const k = e.pointerType === "touch" ? 0.0055 : 0.004;
+  // touch: drag the view like grabbing the world; mouse: same as before
+  state.yaw += dx * k; state.pitch += dy * k; applyLook();
+});
+const endLook = (e) => looks.delete(e.pointerId);
+canvas.addEventListener("pointerup", endLook);
+canvas.addEventListener("pointercancel", endLook);
+canvas.addEventListener("wheel", (e) => {
+  e.preventDefault();
+  state.speed = Math.max(0.3, Math.min(20, state.speed * (e.deltaY > 0 ? 0.88 : 1.14)));
+  updateChips();
+}, { passive: false });
+
+function doAction(code) {
+  switch (code) {
+    case "KeyF":
+      state.fly = !state.fly;
+      if (!state.fly) state.feet = camera.position.y - state.eye;
+      toast(state.fly ? "飛行モード（壁をすり抜けて自由に飛べます）" : "歩行モード"); updateChips(); break;
+    case "KeyG":
+      state.collide = !state.collide;
+      toast(nav ? (state.collide ? "当たり判定 ON" : "当たり判定 OFF（壁をすり抜けます）") : "このデータでは当たり判定を作れませんでした");
+      updateChips(); break;
+    case "KeyX":
+      toast(toggleNavView() ? "解析結果を表示中（色は高さ）" : "解析結果を非表示"); break;
+    case "KeyT": if (current && !document.body.classList.contains("loading")) applyFlip(!current.rec.flip); break;
+    case "KeyV": document.body.classList.toggle("vintage"); toast(document.body.classList.contains("vintage") ? "思い出フィルター ON" : "思い出フィルター OFF"); break;
+    case "KeyP":
+      if (!current) break;
+      current.rec.spawn = getPose();
+      dbPatch(current.rec.id, { spawn: current.rec.spawn }).then(() => saveThumb()).catch(() => {});
+      toast("ここを開始地点にしました"); break;
+    case "KeyR": if (current) { current.rec.spawn ? setPose(current.rec.spawn) : autoSpawn(); toast("開始地点へ戻りました"); } break;
+    case "KeyH": $("#help").classList.toggle("hide"); break;
+    case "Backspace": if (!document.pointerLockElement) exitPlace(); break;
+  }
+  syncMenu();
+}
+addEventListener("keydown", (e) => {
+  if (!document.body.classList.contains("viewing") || e.target.closest?.("input,dialog")) return;
+  state.keys.add(e.code);
+  if (!e.repeat) doAction(e.code);
+});
+
+/* =========================================================
+   Touch controls (phones / tablets)
+   ========================================================= */
+let isTouch = false;
+function setTouchMode(on) {
+  if (isTouch === on) return;
+  isTouch = on;
+  document.body.classList.toggle("touch", on);
+  renderer.setPixelRatio(Math.min(devicePixelRatio, on ? 1.5 : 2));
+  renderer.setSize(innerWidth, innerHeight);
+}
+setTouchMode(matchMedia("(pointer: coarse)").matches || navigator.maxTouchPoints > 0 && !matchMedia("(pointer: fine)").matches);
+
+// Left stick: walk. Pushing it all the way to the rim = jog.
+const joy = { x: 0, y: 0, id: null };
+const stick = $("#stick"), knob = $("#knob");
+function stickMove(e) {
+  const r = stick.getBoundingClientRect();
+  const cx = r.left + r.width / 2, cy = r.top + r.height / 2, R = r.width / 2;
+  let dx = e.clientX - cx, dy = e.clientY - cy;
+  const m = Math.hypot(dx, dy);
+  if (m > R) { dx *= R / m; dy *= R / m; }
+  joy.x = dx / R; joy.y = dy / R;
+  knob.style.transform = `translate(${dx}px, ${dy}px)`;
+  stick.classList.toggle("run", Math.hypot(joy.x, joy.y) > 0.93);
+}
+stick.addEventListener("pointerdown", (e) => {
+  e.preventDefault(); setTouchMode(true);
+  joy.id = e.pointerId; capture(stick, e.pointerId); stick.classList.add("active");
+  document.body.classList.add("touched");
+  stickMove(e);
+});
+stick.addEventListener("pointermove", (e) => { if (e.pointerId === joy.id) stickMove(e); });
+const stickEnd = (e) => {
+  if (e.pointerId !== joy.id) return;
+  joy.id = null; joy.x = joy.y = 0; knob.style.transform = ""; stick.classList.remove("active", "run");
+};
+stick.addEventListener("pointerup", stickEnd);
+stick.addEventListener("pointercancel", stickEnd);
+
+// Hold buttons: raise / lower eye height (or fly up / down)
+document.querySelectorAll("[data-hold]").forEach((b) => {
+  const code = b.dataset.hold;
+  b.addEventListener("pointerdown", (e) => { e.preventDefault(); capture(b, e.pointerId); state.keys.add(code); b.classList.add("on"); });
+  const up = () => { state.keys.delete(code); b.classList.remove("on"); };
+  b.addEventListener("pointerup", up); b.addEventListener("pointercancel", up);
+});
+// Menu
+$("#menuBtn").addEventListener("click", () => { $("#touchMenu").classList.toggle("open"); syncMenu(); });
+document.querySelectorAll("#touchMenu [data-act]").forEach((b) => b.addEventListener("click", () => {
+  doAction(b.dataset.act);
+  if (!b.classList.contains("toggle")) $("#touchMenu").classList.remove("open");
+}));
+function syncMenu() {
+  const set = (act, on) => $(`#touchMenu [data-act="${act}"]`)?.classList.toggle("on", !!on);
+  set("KeyF", state.fly); set("KeyG", state.collide && nav); set("KeyV", document.body.classList.contains("vintage")); set("KeyX", !!navView);
+}
+addEventListener("keyup", (e) => state.keys.delete(e.code));
+addEventListener("blur", () => state.keys.clear());
+
+const fwd = new THREE.Vector3(), right = new THREE.Vector3(), wish = new THREE.Vector3();
+
+// Try to put the body at (x, z). Returns the new floor height, or null if the way is blocked.
+function tryStep(x, z) {
+  const here = groundAt(camera.position.x, camera.position.z, state.feet);
+  if (here == null) return state.feet;                     // lost in the void: move freely so you can get back
+  const gnd = groundAt(x, z, state.feet);
+  if (gnd == null) return null;                            // edge of the scan / hole → don't walk off
+  if (gnd > state.feet + STEP_UP) return null;             // too tall to step on → it's a wall
+  if (!bodyFree(x, z, gnd, state.eye)) {
+    // allow escaping if we are already stuck inside something
+    if (bodyFree(camera.position.x, camera.position.z, state.feet, state.eye)) return null;
+  }
+  return gnd;
+}
+
+function step(dt) {
+  if (!current) return;
+  const k = state.keys;
+  const run = k.has("ShiftLeft") || k.has("ShiftRight") ? 2.3 : 1;
+  const sp = state.speed * run;
+  const walking = !state.fly;
+  const physics = walking && state.collide && nav;
+
+  if (k.has("KeyE")) { if (state.fly) camera.position.y += sp * dt; else state.eye = Math.min(4, state.eye + 0.9 * dt); }
+  if (k.has("KeyQ")) { if (state.fly) camera.position.y -= sp * dt; else state.eye = Math.max(0.3, state.eye - 0.9 * dt); }
+
+  if (state.fly) camera.getWorldDirection(fwd);
+  else fwd.set(-Math.sin(state.yaw), 0, -Math.cos(state.yaw));
+  right.set(Math.cos(state.yaw), 0, -Math.sin(state.yaw));
+  wish.set(0, 0, 0);
+  if (k.has("KeyW") || k.has("ArrowUp")) wish.add(fwd);
+  if (k.has("KeyS") || k.has("ArrowDown")) wish.sub(fwd);
+  if (k.has("KeyD") || k.has("ArrowRight")) wish.add(right);
+  if (k.has("KeyA") || k.has("ArrowLeft")) wish.sub(right);
+  if (wish.lengthSq() > 0) wish.normalize().multiplyScalar(sp);
+  if (joy.x || joy.y) {
+    const m = Math.min(1, Math.hypot(joy.x, joy.y));
+    const dead = m < 0.12 ? 0 : (m - 0.12) / 0.88;           // small dead zone
+    const boost = m > 0.93 ? 2.0 : 1;                          // rim = jog
+    const s = (dead * boost * sp) / (m || 1);
+    wish.addScaledVector(fwd, -joy.y * s).addScaledVector(right, joy.x * s);
+  }
+
+  // smooth acceleration for a softer, "walking" feel
+  state.vel.lerp(wish, 1 - Math.exp(-dt * 10));
+  const mx = state.vel.x * dt, my = state.vel.y * dt, mz = state.vel.z * dt;
+
+  if (!walking) {
+    camera.position.x += mx; camera.position.y += my; camera.position.z += mz;
+    return;
+  }
+
+  let target = state.feet;
+  if (physics && (Math.abs(mx) > 1e-7 || Math.abs(mz) > 1e-7)) {
+    // sub-step so fast movement can't tunnel through thin walls
+    const dist = Math.hypot(mx, mz), n = Math.max(1, Math.ceil(dist / (nav.vs * 0.8)));
+    for (let s = 0; s < n; s++) {
+      const sx = mx / n, sz = mz / n, px = camera.position.x, pz = camera.position.z;
+      let g = tryStep(px + sx, pz + sz);
+      if (g != null) { camera.position.x += sx; camera.position.z += sz; }
+      else {
+        // slide along the wall
+        g = Math.abs(sx) > 1e-7 ? tryStep(px + sx, pz) : null;
+        if (g != null) { camera.position.x += sx; state.vel.z *= 0.5; }
+        else {
+          g = Math.abs(sz) > 1e-7 ? tryStep(px, pz + sz) : null;
+          if (g != null) { camera.position.z += sz; state.vel.x *= 0.5; }
+          else { state.vel.x *= 0.3; state.vel.z *= 0.3; break; }
+        }
+      }
+    }
+  } else if (!physics) {
+    camera.position.x += mx; camera.position.z += mz;
+  }
+  if (physics) {
+    const g = groundAt(camera.position.x, camera.position.z, state.feet);
+    if (g != null) target = g;
+    // stairs: rise quickly but smoothly; going down a bit gentler
+    const d = target - state.feet;
+    state.feet += d * (1 - Math.exp(-dt * (d > 0 ? 14 : 10)));
+  }
+
+  const speedNow = Math.hypot(state.vel.x, state.vel.z);
+  state.bob += dt * speedNow * 5.5;
+  const bob = Math.sin(state.bob) * 0.018 * Math.min(1, speedNow / 1.4);
+  const targetY = state.feet + state.eye + bob;
+  camera.position.y += (targetY - camera.position.y) * (1 - Math.exp(-dt * 16));
+}
+
+/* =========================================================
+   HUD
+   ========================================================= */
+function updateChips() {
+  $("#modeChip").innerHTML = `<b>${state.fly ? "飛行" : "歩行"}</b>` +
+    (nav && !state.fly ? ` · 当たり判定 <b>${state.collide ? "ON" : "OFF"}</b>` : "");
+  $("#speedChip").innerHTML = `速さ <b>${state.speed.toFixed(1)}</b> m/s`;
+}
+let toastT;
+function toast(msg) {
+  const t = $("#toast"); t.textContent = msg; t.classList.add("show");
+  clearTimeout(toastT); toastT = setTimeout(() => t.classList.remove("show"), 1800);
+}
+
+/* =========================================================
+   Loop
+   ========================================================= */
+const timer = new THREE.Timer();
+renderer.setAnimationLoop((t) => {
+  timer.update(t);
+  const dt = Math.min(timer.getDelta(), 0.05);
+  if (document.body.classList.contains("viewing")) {
+    step(dt);
+    renderer.render(scene, camera);
+  }
+});
+window.__app = { get current() { return current; }, get nav() { return nav; }, camera, state, scene, groundAt, bodyFree, step };
+</script>
+</body>
+</html>
