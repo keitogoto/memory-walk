@@ -204,11 +204,11 @@
 
     <div id="drop">
       <strong class="desk-only">ここに3Dデータをドラッグ＆ドロップ</strong><strong class="touch-only">3Dデータを追加</strong>
-      <p>対応形式: <b>.spz</b> / <b>.ply</b>（スプラット・メッシュ・点群）/ <b>.glb</b> / <b>.gltf</b> / <b>.obj</b>（.mtl・テクスチャ画像と一緒に）/ <b>.fbx</b> / <b>.usdz</b><br>
+      <p>対応形式: <b>.spz</b> / <b>.ply</b>（スプラット・メッシュ・点群）/ <b>.glb</b> / <b>.gltf</b> / <b>.obj</b>（.mtl・テクスチャ画像と一緒に）/ <b>.fbx</b> / <b>.usdz</b> / それらをまとめた <b>.zip</b><br>
         Scaniverseアプリの「Share → Export」で書き出したファイルをそのまま使えます。</p>
       <button class="btn primary" id="pickBtn">ファイルを選ぶ</button>
       <input type="file" id="fileInput" multiple hidden
-        accept=".spz,.ply,.splat,.ksplat,.sog,.glb,.gltf,.bin,.obj,.mtl,.fbx,.usdz,.usd,.usda,.usdc,.jpg,.jpeg,.png,.webp">
+        accept=".spz,.ply,.splat,.ksplat,.sog,.glb,.gltf,.bin,.obj,.mtl,.fbx,.usdz,.usd,.usda,.usdc,.jpg,.jpeg,.png,.webp,.zip">
     </div>
 
     <h2 class="section">思い出の場所</h2>
@@ -384,6 +384,10 @@ async function kindOf(main) {
    ========================================================= */
 let pendingFiles = null;
 const drop = $("#drop");
+// iOS only lets you pick file types it knows (UTIs). .fbx / .spz / .ply etc. are unknown to it
+// and show up greyed out, so on iPhone/iPad we accept everything and check the files ourselves.
+const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
+if (isIOS) $("#fileInput").removeAttribute("accept");
 $("#pickBtn").onclick = () => $("#fileInput").click();
 $("#fileInput").onchange = (e) => { handleFiles([...e.target.files]); e.target.value = ""; };
 ["dragenter", "dragover"].forEach((t) => window.addEventListener(t, (e) => {
@@ -397,10 +401,29 @@ window.addEventListener("drop", (e) => {
   handleFiles([...e.dataTransfer.files]);
 });
 
-function handleFiles(files) {
+// Scaniverse's OBJ/FBX exports often arrive as a .zip — open it in the browser.
+async function expandZips(files) {
+  const out = [];
+  for (const f of files) {
+    if (ext(f.name) !== "zip") { out.push(f); continue; }
+    const { unzip } = await import("three/addons/libs/fflate.module.js");
+    const bytes = new Uint8Array(await f.arrayBuffer());
+    const entries = await new Promise((res, rej) => unzip(bytes, (err, data) => (err ? rej(err) : res(data))));
+    for (const [path, data] of Object.entries(entries)) {
+      const name = path.split("/").pop();
+      if (!name || path.startsWith("__MACOSX/") || name.startsWith(".") || !data.length) continue;
+      out.push(new File([data], name));
+    }
+  }
+  return out;
+}
+
+async function handleFiles(files) {
+  try { files = await expandZips(files); }
+  catch (err) { alert("zipファイルを開けませんでした: " + (err?.message || err)); return; }
   files = files.filter((f) => f.size > 0);
   const main = pickMain(files);
-  if (!main) { alert("対応している3Dファイルが見つかりませんでした。\n.spz / .ply / .glb / .obj などを選んでください。\n（.zip の場合は先に解凍してください）"); return; }
+  if (!main) { alert("対応している3Dファイルが見つかりませんでした。\n.spz / .ply / .glb / .obj / .fbx / .usdz（またはそれらを含む.zip）を選んでください。"); return; }
   pendingFiles = files;
   const base = main.name.replace(/\.[^.]+$/, "");
   $("#nameIn").value = base;
@@ -561,7 +584,9 @@ async function loadModel(rec) {
   } else if (e === "fbx") {
     const { FBXLoader } = await import("three/addons/loaders/FBXLoader.js");
     obj = await new FBXLoader(manager).loadAsync(mainUrl, onProg);
-    obj.scale.setScalar(0.01); // FBX is usually in cm
+    // FBX may be in cm or m. A room/building scan is a few to ~100 m across, so >200 units means cm.
+    const ext3 = new THREE.Box3().setFromObject(obj).getSize(new THREE.Vector3());
+    if (Math.max(ext3.x, ext3.y, ext3.z) > 200) obj.scale.setScalar(0.01);
   } else if (e === "ply") {
     const geo = await new PLYLoader(manager).loadAsync(mainUrl, onProg);
     const hasColor = !!geo.getAttribute("color");
